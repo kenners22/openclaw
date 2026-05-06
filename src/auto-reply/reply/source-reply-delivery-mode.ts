@@ -5,8 +5,16 @@ import type { SourceReplyDeliveryMode } from "../get-reply-options.types.js";
 
 export type SourceReplyDeliveryModeContext = {
   ChatType?: string;
+  CommandBody?: string;
   CommandSource?: "text" | "native";
 };
+
+export function isExplicitSourceReplyCommand(ctx: SourceReplyDeliveryModeContext): boolean {
+  if (ctx.CommandSource === "native") {
+    return true;
+  }
+  return ctx.CommandSource === "text" && ctx.CommandBody?.trim().startsWith("/") === true;
+}
 
 export function resolveSourceReplyDeliveryMode(params: {
   cfg: OpenClawConfig;
@@ -20,7 +28,7 @@ export function resolveSourceReplyDeliveryMode(params: {
       ? "automatic"
       : params.requested;
   }
-  if (params.ctx.CommandSource === "native" || params.ctx.CommandSource === "text") {
+  if (isExplicitSourceReplyCommand(params.ctx)) {
     return "automatic";
   }
   const chatType = normalizeChatType(params.ctx.ChatType);
